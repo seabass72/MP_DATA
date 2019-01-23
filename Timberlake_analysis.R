@@ -12,9 +12,6 @@ data2<-data[!is.na(data$DON), ]
 
 data3 <- data2[!is.na(data2$SRP), ]
 
-#add new column
-
-data3$Restoration <- NA
 
 #change data format 
 
@@ -34,6 +31,7 @@ data3$Month <- date_M
 
 inflow <- subset.data.frame(data3,data3$Site == "Inflow",)
 outflow <- subset.data.frame(data3,data3$Site == "Outflow",)
+pump_Station <- subset.data.frame(data3,data3$Site == "Pump_station",)
 
 # dates for inflow and outflow 
 
@@ -41,30 +39,32 @@ inflow_D <- inflow$Date
 
 outflow_D <- outflow$Date
 
+pump_Station_D <-pump_Station$Date
 
 #merge the inflow and outflow and match the dates 
 
-merge_IFL_OFL <- merge(inflow ,outflow,by="Date",all=FALSE,sort=FALSE)
+merge_IFL_OFL <- merge(inflow ,pump_Station, by="Date",all=FALSE,sort=FALSE)
 
+Merge_INOUTPUMP <- merge(merge_IFL_OFL, outflow, by="Date",all=FALSE,sort=FALSE)
 # create a % removal of total dissolved nitrogen 
 
-merge_IFL_OFL$TN_DIFF <- (((merge_IFL_OFL$TDN.x - merge_IFL_OFL$TDN.y)/merge_IFL_OFL$TDN.x)*100)
+Merge_INOUTPUMP$TN_DIFF <- (((Merge_INOUTPUMP$TDN.x +Merge_INOUTPUMP$TDN.y) - Merge_INOUTPUMP$TDN)/(Merge_INOUTPUMP$TDN.x+Merge_INOUTPUMP$TDN.y)*100)
 
 # create a % removal of SRP
 
-merge_IFL_OFL$SRP_DIFF <- (((merge_IFL_OFL$SRP.x - merge_IFL_OFL$SRP.y)/merge_IFL_OFL$SRP.x)*100)
+Merge_INOUTPUMP$SRP_DIFF <- (((Merge_INOUTPUMP$SRP.x +Merge_INOUTPUMP$SRP.y) - Merge_INOUTPUMP$SRP)/(Merge_INOUTPUMP$SRP.x+Merge_INOUTPUMP$SRP.y)*100)
 
 # add previous landcover type 
 
-merge_IFL_OFL$prev_lnd_cvr <- "AGR"
+Merge_INOUTPUMP$prev_lnd_cvr <- "AGR"
 
 # add size to data 
 
-merge_IFL_OFL$Size <- 4400000
+Merge_INOUTPUMP$Size <- 4400000
 
 #pull out date of final data stuff 
 
-date_loop <- merge_IFL_OFL$Date
+date_loop <- Merge_INOUTPUMP$Date
 
 # for loop / creating restoration year progression
 restore = c();
@@ -87,13 +87,13 @@ restore[x] <- r
 
 # time of restoration inserted into dataframe 
 
-merge_IFL_OFL$Restoration_Age <- restore
+Merge_INOUTPUMP$Restoration_Age <- restore
   
 # for loop to create a categorical category for precipitation 
 
 # 1. pull out the precipitation data 
 
-pre_x <- merge_IFL_OFL$Precipitation.x
+pre_x <- Merge_INOUTPUMP$Precipitation.x
 
 #create the four loop
 
@@ -130,33 +130,44 @@ z[i] <- p
 
 
 #create new dataframe with the rows that we need 
-timb_data_remove <- merge_IFL_OFL
+timb_data_remove <- Merge_INOUTPUMP
 
 # remove unnessary rows 
 
 timb_data_remove$Level.x <-NULL
 timb_data_remove$Level.y <-NULL
+timb_data_remove$Level <-NULL
 timb_data_remove$NH4.x <-NULL
 timb_data_remove$NH4.y <-NULL
+timb_data_remove$NH4 <-NULL
 timb_data_remove$NO3.x <-NULL
 timb_data_remove$NO3.y <-NULL
+timb_data_remove$NO3 <-NULL
+imb_data_remove$NO3 <-NULL
 timb_data_remove$DON.x <-NULL
 timb_data_remove$DON.y <-NULL
+timb_data_remove$DON <-NULL
 timb_data_remove$Cl.x <-NULL
 timb_data_remove$Cl.y <-NULL
-timb_data_remove$NO3.y <-NULL
+timb_data_remove$Cl <-NULL
 timb_data_remove$Site.x <-NULL
 timb_data_remove$Site.y <-NULL
 timb_data_remove$SO4.x <-NULL
 timb_data_remove$SO4.y <-NULL
+timb_data_remove$SO4 <-NULL
 timb_data_remove$Precipitation.y <- NULL
+timb_data_remove$Precipitation.x <- NULL
 timb_data_remove$DOC.x <-NULL
 timb_data_remove$DOC.y <-NULL
+timb_data_remove$DOC <-NULL
 timb_data_remove$Restoration.x <-NULL
 timb_data_remove$Restoration.y <-NULL
+timb_data_remove$Restoration <-NULL
 timb_data_remove$Month.y <-NULL
+timb_data_remove$Month <-NULL
 
-merge_IFL_OFL$storm<-ifelse(merge_IFL_OFL$Precipitation.x > 0,1,0)
+
+Merge_INOUTPUMP$storm<-ifelse(Merge_INOUTPUMP$Precipitation.x > 0,1,0)
 
 
 
